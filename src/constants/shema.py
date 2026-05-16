@@ -59,3 +59,18 @@ class RouteQuery(BaseModel):
     # The category selected for routing the user's query to an appropriate agent.
     route : RouteType = Field(
         ..., description="The category selected for routing the user's query.")
+    note: Optional[str] = Field(
+        None, description="Optional note or explanation from the LLM about the routing decision.")
+
+
+class ResearchOutput(BaseModel):
+
+    concepts: List[str]
+
+    retrieved_docs: List[str]
+
+    code_examples: List[str]
+
+    references: List[str]
+
+    summary: str
