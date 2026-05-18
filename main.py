@@ -14,23 +14,32 @@
 # res = chain.invoke({"query": "What is the best software for data analysis?"})
 
 # pprint(res)
-"""Basic connection example.
-"""
+# """Basic connection example.
+# """
 
-import redis
+# import redis
 
-r = redis.Redis(
-    host='redis-12980.crce281.ap-south-1-3.ec2.cloud.redislabs.com',
-    port=12980,
-    decode_responses=True,
-    username="default",
-    password="zo9Qk9rTjWYv19ARvEXTtPcDXmf0ARkN",
-)
+# r = redis.Redis(
+#     host='redis-12980.crce281.ap-south-1-3.ec2.cloud.redislabs.com',
+#     port=12980,
+#     decode_responses=True,
+#     username="default",
+#     password="zo9Qk9rTjWYv19ARvEXTtPcDXmf0ARkN",
+# )
 
-success = r.set('foo', 'bar')
-# True
+# success = r.set('foo', 'bar')
+# # True
 
-result = r.get('foo')
-print(result)
-# >>> bar
+# result = r.get('foo')
+# print(result)
+# # >>> bar
+
+from langchain_community.retrievers import WikipediaRetriever
+
+wiki = WikipediaRetriever(verbose=True)
+
+data = wiki.invoke("What is the capital of France?")
+
+r = [item.page_content for item in data]
+print(r[:2000])
 

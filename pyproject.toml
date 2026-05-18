@@ -17,7 +17,6 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "redis>=7.4.0",
     "uvicorn>=0.47.0",
-    # Data Search Module Dependencies
     "tavily-python>=0.3.0",
     "pymupdf>=1.23.0",
     "unstructured[pdf,epub]>=0.12.0",
@@ -26,4 +25,6 @@ dependencies = [
     "ebooklib>=0.18",
     "langchain-openai>=0.2.0",
     "sentence-transformers>=2.2.0",
+    "wikipedia>=1.4.0",
+    "torch==2.12.0",
 ]
