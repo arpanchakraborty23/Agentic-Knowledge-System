@@ -34,12 +34,22 @@
 # print(result)
 # # >>> bar
 
-from langchain_community.retrievers import WikipediaRetriever
+from langchain.chat_models import ChatOpenAI
+from src.services import DeepTutorOrchestrator
 
-wiki = WikipediaRetriever(verbose=True)
 
-data = wiki.invoke("What is the capital of France?")
+def main() -> None:
+    model = ChatOpenAI(temperature=0.2)
+    orchestrator = DeepTutorOrchestrator(model)
 
-r = [item.page_content for item in data]
-print(r[:2000])
+    user_query = "Explain the concept of derivatives in calculus and suggest study resources."
+    state = orchestrator.run(user_query, user_id="student-123")
+
+    for message in state.messages:
+        print("--- BOT RESPONSE ---")
+        print(message.content)
+
+
+if __name__ == "__main__":
+    main()
 

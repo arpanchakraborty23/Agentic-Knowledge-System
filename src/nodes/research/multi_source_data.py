@@ -55,7 +55,8 @@ class WikipediaLoader:
         try:
             result = self.wiki_query.invoke(query)
             data = [item.page_content for item in result]
-            return Document(page_content=data[:2000], metadata={"source": "Wikipedia", "query": query})
+            content = "\n\n".join(data)[:2000]
+            return Document(page_content=content, metadata={"source": "Wikipedia", "query": query})
         except Exception as e:
             print(f"Error during Wikipedia query: {str(e)}")
             return Document(page_content="", metadata={"source": "Wikipedia", "query": query})
@@ -78,7 +79,8 @@ class ArxivLoader:
         try:
             result = self.arxiv_query.invoke(query)
             data = [item.page_content for item in result]
-            return Document(page_content=data[:2000], metadata={"source": "Arxiv", "query": query})
+            content = "\n\n".join(data)[:2000]
+            return Document(page_content=content, metadata={"source": "Arxiv", "query": query})
         except Exception as e:
             print(f"Error during Arxiv query: {str(e)}")
             return Document(page_content="", metadata={"source": "Arxiv", "query": query})

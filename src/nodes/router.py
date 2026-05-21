@@ -32,17 +32,22 @@ class RouterAgent:
             else ""
         )
 
-        # Invoke the LLM chain with the user query.
-        # The chain will classify the query into a route category and
-        # return a RouteQuery object with the `route` attribute set.
         response = self.chain.invoke({
-            "query": query
+            "query": query,
+            "board": state.board or "None",
+            "grade": state.grade or "None",
+            "subject": state.subject or "None",
+            "topic": state.topic or "None",
+            "domain": state.memory.get("domain") if isinstance(state.memory, dict) else "None",
         })
 
-        # Update the GraphState with the determined routing category
-        # so the next node in the workflow knows which agent to use.
+        memory = dict(state.memory or {})
+        memory["route_note"] = response.note
+        memory["route_domain"] = response.route
+
         return state.model_copy(
             update={
-                "current_agent": response.route
+                "current_agent": response.route,
+                "memory": memory,
             }
         )

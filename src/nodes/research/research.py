@@ -1,4 +1,5 @@
-from typing import List
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import List, Tuple
 
 from src.constants import GraphState, ResearchOutput
 from src.nodes.research.multi_source_data import TavilyWebLoader, WikipediaLoader, ArxivLoader
@@ -10,20 +11,38 @@ class ResearchAgent:
         self.wikipedia = WikipediaLoader()
         self.arxiv = ArxivLoader()
 
-    def run(self, state: GraphState) -> ResearchOutput:
-        query = state.topic or state.messages[-1].content if state.messages else ""
-        
-        tavily_doc = self.tavily.search(query)
-        wiki_doc = self.wikipedia.search(query)
-        arxiv_doc = self.arxiv.search(query)
+    def _search_source(self, loader, query: str, source_name: str) -> Tuple[str, str]:
+        document = loader.search(query)
+        return source_name, document.page_content or ""
 
-        all_docs = [tavily_doc.page_content, wiki_doc.page_content, arxiv_doc.page_content]
-        retrieved_docs = [d for d in all_docs if d]
+    def run(self, state: GraphState) -> ResearchOutput:
+        query = state.topic or (state.messages[-1].content if state.messages else "")
+
+        sources = [
+            (self.tavily, "Tavily"),
+            (self.wikipedia, "Wikipedia"),
+            (self.arxiv, "Arxiv"),
+        ]
+
+        retrieved_docs: List[str] = []
+        with ThreadPoolExecutor(max_workers=len(sources)) as executor:
+            future_to_source = {
+                executor.submit(self._search_source, loader, query, name): name
+                for loader, name in sources
+            }
+            for future in as_completed(future_to_source):
+                source_name = future_to_source[future]
+                try:
+                    _, content = future.result()
+                    if content:
+                        retrieved_docs.append(f"Source: {source_name}\n{content}")
+                except Exception as exc:
+                    retrieved_docs.append(f"Source: {source_name} encountered an error: {exc}")
 
         return ResearchOutput(
             concepts=[],
             retrieved_docs=retrieved_docs,
             code_examples=[],
             references=[],
-            summary=f"Research completed for query: {query}"
+            summary=f"Research completed for query: {query}",
         )
