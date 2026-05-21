@@ -63,6 +63,15 @@ class RouteQuery(BaseModel):
         None, description="Optional note or explanation from the LLM about the routing decision.")
 
 
+class UserProfile(BaseModel):
+    board: Optional[str] = Field(None, description="Inferred school board or curriculum context.")
+    grade: Optional[str] = Field(None, description="Inferred student grade or education level.")
+    subject: Optional[str] = Field(None, description="Inferred subject area for the query.")
+    topic: Optional[str] = Field(None, description="Inferred topic or subtopic of the user's question.")
+    domain: Optional[str] = Field(None, description="Inferred domain or learner intent domain.")
+    note: Optional[str] = Field(None, description="Optional profiling note or reasoning from the model.")
+
+
 class ResearchOutput(BaseModel):
 
     concepts: List[str]
