@@ -18,21 +18,22 @@ def required_env(name: str) -> str:
 
 
 
-class AWSConfig:
-    aws_access_key = required_env("AWS_ACCESS_KEY_ID")
-    aws_secret_key = required_env("AWS_SECRET_ACCESS_KEY")
-    aws_region = required_env("AWS_REGION")
-    aws_recording_bucket = required_env("AWS_BUCKET_NAME")
+# class AWSConfig:
+#     aws_access_key = required_env("AWS_ACCESS_KEY_ID")
+#     aws_secret_key = required_env("AWS_SECRET_ACCESS_KEY")
+#     aws_region = required_env("AWS_REGION")
+#     aws_recording_bucket = required_env("AWS_BUCKET_NAME")
 
 
 class MongoConfig:
     mongodb_uri = env("MONGODB_URI")
     mongodb_name = env("MONGODB_DATABASE_NAME")
+    mongodb_collection = env("MONGODB_COLLECTION_NAME")
 
 
 
 class ProviderConfig:
-    aws_bedrock_api_key = required_env("AWS_BEDROCK_API_KEY")
+    #aws_bedrock_api_key = required_env("AWS_BEDROCK_API_KEY")
     groq_api_key = required_env("GROQ_API_KEY")
-    tavily_api_key = required_env("TAVILY_API_KEY")
+    tavily_api_key = required_env("TAVLIY_API_KEY")
 

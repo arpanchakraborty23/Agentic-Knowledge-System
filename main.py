@@ -1,21 +1,31 @@
-# from src.utils import llm_chain
-# from src.prompts import ROUTE_PROMPT
-# from src.constants import RouteQuery
-# from langchain_groq import ChatGroq
-# from dotenv import load_dotenv
-# from pprint import pprint
+from src.utils import llm_chain
+from src.prompts import CLASSIFER_PROMPT
+from src.constants import ClassifiQuery
+from langchain_groq import ChatGroq
+from dotenv import load_dotenv
+from rich import print
 
-# load_dotenv()
+load_dotenv()
 
-# llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.3)
+llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.3)
 
-# chain = llm_chain(ROUTE_PROMPT, llm, RouteQuery)
+chain = llm_chain(CLASSIFER_PROMPT, llm, ClassifiQuery)
 
-# res = chain.invoke({"query": "What is the best software for data analysis?"})
+questions = [
+    "What is the best software for data analysis?",
+    "What is the capital of France?",
+    "How do I prepare for a software engineering interview?",
+    "What are the key features of the Indian education system?",
+    "Can you explain the Pythagorean theorem?"
+    "What are the latest advancements in AI research?"
+]
 
-# pprint(res)
-# """Basic connection example.
-# """
+for question in questions:
+    print(f"\n[bold green]Question:[/bold green] {question}")
+    res = chain.invoke({"query": question})
+    
+    print(res)
+
 
 # import redis
 
@@ -34,22 +44,4 @@
 # print(result)
 # # >>> bar
 
-from langchain.chat_models import ChatOpenAI
-from src.services import DeepTutorOrchestrator
-
-
-def main() -> None:
-    model = ChatOpenAI(temperature=0.2)
-    orchestrator = DeepTutorOrchestrator(model)
-
-    user_query = "Explain the concept of derivatives in calculus and suggest study resources."
-    state = orchestrator.run(user_query, user_id="student-123")
-
-    for message in state.messages:
-        print("--- BOT RESPONSE ---")
-        print(message.content)
-
-
-if __name__ == "__main__":
-    main()
 

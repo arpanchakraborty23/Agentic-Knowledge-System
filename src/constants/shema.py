@@ -13,33 +13,14 @@ class GraphState(BaseModel):
 
     # History of chat messages exchanged with the user or agents.
     # Uses LangChain message objects so the agent can preserve role/type.
-    messages: Annotated[List[AnyMessage], add] = Field(default_factory=list)
+    query: str = Field(..., description="The query to be processed.")
 
-    # Educational context properties. These can be used to tailor
-    # agent behavior, retrieval, or response generation.
-    board: Optional[str] = None
-    grade: Optional[str] = None
-    subject: Optional[str] = None
-    topic: Optional[str] = None
+    # The classified domain/category of the query after routing (e.g., software, indian_school, etc.)
+    classified_domain : Optional[str] = Field(None, description="The classified domain of the query")
+    classifier_note: Optional[str] = Field(None, description="Optional note or explanation from the LLM about the classification decision.")
 
-    # The identifier of the currently active or selected agent.
-    current_agent: Optional[str] = None
+    research_data : Optional[dict] = Field(None, description="Data retrieved from research nodes, if applicable.")
 
-    # Documents retrieved from search or knowledge sources during
-    # the current session.
-    retrieved_docs: list = Field(default_factory=list)
-
-    # A generic memory store for persistent or temporary state.
-    memory: dict = Field(default_factory=dict)
-
-    # Store outputs from tools or external systems keyed by tool name.
-    tool_results: dict = Field(default_factory=dict)
-
-    # Sequence of workflow actions or steps the system is tracking.
-    workflow: Annotated[List[str], add] = Field(default_factory=list)
-
-    # The next action the agent should perform, if any.
-    next_action: Optional[str] = None
 
 
 
@@ -51,11 +32,12 @@ class RouteType(str, Enum):
     JOB_PREPARATION = "job_preparation"
     GENERAL_KNOWLEDGE = "general_knowledge"
     MATH = "math"
+    NON_TECH = "non_tech"
 
 
 # RouteQuery represents the structured output from the routing LLM.
 # It contains the determined routing category for a user's query.
-class RouteQuery(BaseModel):
+class ClassifiQuery(BaseModel):
     # The category selected for routing the user's query to an appropriate agent.
     route : RouteType = Field(
         ..., description="The category selected for routing the user's query.")
@@ -63,13 +45,7 @@ class RouteQuery(BaseModel):
         None, description="Optional note or explanation from the LLM about the routing decision.")
 
 
-class UserProfile(BaseModel):
-    board: Optional[str] = Field(None, description="Inferred school board or curriculum context.")
-    grade: Optional[str] = Field(None, description="Inferred student grade or education level.")
-    subject: Optional[str] = Field(None, description="Inferred subject area for the query.")
-    topic: Optional[str] = Field(None, description="Inferred topic or subtopic of the user's question.")
-    domain: Optional[str] = Field(None, description="Inferred domain or learner intent domain.")
-    note: Optional[str] = Field(None, description="Optional profiling note or reasoning from the model.")
+
 
 
 class ResearchOutput(BaseModel):

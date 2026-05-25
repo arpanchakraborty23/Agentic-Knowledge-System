@@ -1,8 +1,5 @@
-from .agent_prompt import PROFILE_PROMPT, ROUTE_PROMPT, DOC_SUMMARY_PROMPT, SUPERVISOR_PROMPT
+from .agent_prompt import CLASSIFER_PROMPT
 
 __all__ = [
-    "PROFILE_PROMPT",
-    "ROUTE_PROMPT",
-    "DOC_SUMMARY_PROMPT",
-    "SUPERVISOR_PROMPT",
+    "CLASSIFER_PROMPT"
 ]
