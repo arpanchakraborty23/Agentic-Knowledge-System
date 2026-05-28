@@ -38,4 +38,18 @@ class GraphBuilder:
         except Exception as e:
             logger.error("Error building graph: %s", str(e))
 
+class GraphAgent:
+    """"Main Agent Entrypoint"""
+    def __init__(self):
+        self._graph = GraphBuilder()._build_graph()
+
+    def invoke(self,query):
+        try:
+            response = self._graph({
+                "query" : query 
+            })
+
+            return response
+        except Exception as e:
+            raise e
        
