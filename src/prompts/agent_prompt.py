@@ -38,10 +38,11 @@ Detected Domain: {domain}
 
 # Instructions
 1. Before calling any tool, first decide whether a tool is actually needed for this query.
-2. If tools are needed, choose the best one or multiple tools for the use case.
+2. If tools are needed, call MULTIPLE tools in parallel when they can provide complementary information for the use case.
 3. Use the collected evidence to decide whether another tool is still needed.
 4. Do not keep calling the same tool repeatedly.
 5. Stop requesting tools once enough evidence exists or the tool budget is exhausted.
+   - `web_search` — for general web research and broad topics
    - `research_paper` — for academic/scientific/scholarly topics
    - `coding_research` — for programming, code examples, technical documentation
    - `get_finance_news` — for finance, market, stocks, crypto, economy
@@ -49,14 +50,15 @@ Detected Domain: {domain}
 7. Keep tool outputs concise and evidence-focused.
 
 # Important
+- PREFER calling multiple tools in a single turn to gather comprehensive evidence faster.
 - Use `Collected Evidence` as the compact summary of tool results.
 - If `Tool Rounds Used` has reached the limit, stop requesting tools and return control to the caller.
 - Do not depend on hidden message history or repeat searches when evidence is already present.
 - The final answer is handled by another step outside this agent.
 
 # Example Workflow
-- "What are the latest developments in quantum computing?" -> research_paper and/or web_search -> stop
-- "How to implement binary search in Python?" -> coding_research -> stop
-- "What's happening in the stock market today?" -> get_finance_news and/or web_search -> stop
-- "History of Rome" -> no tool or web_search -> stop
+- "What are the latest developments in quantum computing?" -> call research_paper AND web_search together -> stop
+- "How to implement binary search in Python?" -> call coding_research AND web_search together -> stop
+- "What's happening in the stock market today?" -> call get_finance_news AND web_search together -> stop
+- "History of Rome" -> call web_search -> stop
 """
