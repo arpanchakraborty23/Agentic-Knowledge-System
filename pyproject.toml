@@ -27,4 +27,7 @@ dependencies = [
     "sentence-transformers>=2.2.0",
     "wikipedia>=1.4.0",
     "torch==2.12.0",
+    "langchain-tavily>=0.2.18",
+    "playwright>=1.60.0",
+    "arxiv>=4.0.0",
 ]

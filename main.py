@@ -1,47 +1,29 @@
-from src.utils import llm_chain
-from src.prompts import CLASSIFER_PROMPT
-from src.constants import ClassifiQuery
-from langchain_groq import ChatGroq
-from dotenv import load_dotenv
+import asyncio
 from rich import print
+from src.tools import ToolMemory, create_research_tools
 
-load_dotenv()
+async def test_research_tools():
+    print("[bold green]Testing Research Tools...[/bold green]")
 
-llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.3)
+    memory = ToolMemory()
+    tools = create_research_tools(memory)
+    tool_map = {t.name: t for t in tools}
 
-chain = llm_chain(CLASSIFER_PROMPT, llm, ClassifiQuery)
+    print("\n[bold blue]1. Testing Web Search Tool[/bold blue]")
+    result = await tool_map["web_search"].ainvoke({"query": "what is LangChain"})
+    print(f"URLs: {result[:300]}...")
 
-questions = [
-    "What is the best software for data analysis?",
-    "What is the capital of France?",
-    "How do I prepare for a software engineering interview?",
-    "What are the key features of the Indian education system?",
-    "Can you explain the Pythagorean theorem?"
-    "What are the latest advancements in AI research?"
-]
+    print("\n[bold blue]2. Testing Arxiv Research Tool[/bold blue]")
+    result = await tool_map["research_paper"].ainvoke({"query": "Attention is all you need"})
+    print(f"Paper data: {result[:300]}...")
 
-for question in questions:
-    print(f"\n[bold green]Question:[/bold green] {question}")
-    res = chain.invoke({"query": question})
-    
-    print(res)
+    print("\n[bold blue]3. Testing Coding Research Tool[/bold blue]")
+    result = await tool_map["coding_research"].ainvoke({"query": "asyncio gather python"})
+    print(f"Coding data: {result[:300]}...")
 
+    print("\n[bold green]Tool Memory Contents:[/bold green]")
+    for tool_name, entries in memory.get_all_results().items():
+        print(f"\n  {tool_name}: {len(entries)} call(s)")
 
-# import redis
-
-# r = redis.Redis(
-#     host='redis-12980.crce281.ap-south-1-3.ec2.cloud.redislabs.com',
-#     port=12980,
-#     decode_responses=True,
-#     username="default",
-#     password="zo9Qk9rTjWYv19ARvEXTtPcDXmf0ARkN",
-# )
-
-# success = r.set('foo', 'bar')
-# # True
-
-# result = r.get('foo')
-# print(result)
-# # >>> bar
-
-
+if __name__ == "__main__":
+    asyncio.run(test_research_tools())
