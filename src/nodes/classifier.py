@@ -2,7 +2,9 @@ from langchain.chat_models import BaseChatModel
 
 from src.constants import GraphState, ClassifiQuery
 from src.prompts import CLASSIFER_PROMPT
-from src.utils import llm_chain, logger
+from src.utils import llm_chain, get_logger
+
+logger = get_logger(name="KnowledgeAgent")
 
 
 
@@ -10,7 +12,7 @@ from src.utils import llm_chain, logger
 # and determining which specialized agent should handle them.
 # It uses an LLM with structured output to route queries to categories
 # like software, indian_school, job_preparation, general_knowledge, or math.
-class ClassifierAgent:
+class ClassifierNode:
     def __init__(self, model: BaseChatModel):
         self.model = model
 
@@ -18,9 +20,9 @@ class ClassifierAgent:
         # the LLM model, and a Pydantic schema (ClassifiQuery) for
         # structured output parsing.
         self.chain = llm_chain(
-            CLASSIFER_PROMPT,
-            self.model,
-            ClassifiQuery
+            template=CLASSIFER_PROMPT,
+            llm=self.model,
+            output_parser_class=ClassifiQuery
         )
         logger.info("ClassifierAgent initialized with model: %s", self.model)
 

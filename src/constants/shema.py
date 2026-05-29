@@ -11,8 +11,12 @@ class GraphState(BaseModel):
     # Unique identifier for the current user or session.
     user_id: Optional[str] = None
 
-    # History of chat messages exchanged with the user or agents.
-    # Uses LangChain message objects so the agent can preserve role/type.
+    # Conversation history accumulated across graph steps.
+    # Uses the `add` reducer so messages from each node are merged,
+    # not overwritten — standard LangGraph pattern for stateful chat.
+    messages: Annotated[List[AnyMessage], add] = Field(default_factory=list, description="Conversation history")
+
+    # The current user query for this turn.
     query: str = Field(..., description="The query to be processed.")
 
     # The classified domain/category of the query after routing (e.g., software, indian_school, etc.)
@@ -21,14 +25,14 @@ class GraphState(BaseModel):
 
     research_data : Optional[dict] = Field(None, description="Data retrieved from research nodes, if applicable.")
 
+    knowledge_base : Optional[Literal["retrive","add"]] = Field(None, description="Knowledge base need to create if applicable.")
 
 
 class ResearchAgentState(BaseModel):
     query: str
     domain: str
-    results: List[str] = []
-
-
+    messages: Annotated[List[AnyMessage], add] = Field(default_factory=list)
+    documents: Annotated[List[str], add] = Field(default_factory=list)
 
 
 
@@ -54,16 +58,3 @@ class ClassifiQuery(BaseModel):
 
 
 
-
-
-class ResearchOutput(BaseModel):
-
-    concepts: List[str]
-
-    retrieved_docs: List[str]
-
-    code_examples: List[str]
-
-    references: List[str]
-
-    summary: str

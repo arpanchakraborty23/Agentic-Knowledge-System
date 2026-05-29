@@ -3,38 +3,34 @@ import urllib.parse
 import asyncio
 from langchain_tavily import TavilySearch
 from langchain_community.tools import ArxivQueryRun
-from langchain.tools import  tool
+from langchain.tools import tool
 
-from src.constants import ProviderConfig
+from src.constants import ProviderConfig, ResearchAgentState
 from src.utils import get_logger, read_url
 
-logger = get_logger(name="Research Tools")
+logger = get_logger(name="KnowledgeAgent")
 
 
-
-async def fetch_urls(urls_str: str) -> str:
-    """Fetch and extract readable text content from one or more URLs. Provide URLs as a comma-separated list."""
+async def fetch_urls(urls: list[str]) -> list[str]:
+    """Fetch and extract readable text content from a list of URLs."""
     try:
-        urls = [u.strip() for u in urls_str.split(",") if u.strip()]
         if not urls:
-            return "No valid URLs provided."
+            return []
         data = await asyncio.gather(*[read_url(url) for url in urls])
-        parts = [
-            f"--- {url} ---\n{content[:2000]}"
-            for url, content in zip(urls, data)
-        ]
-        return "\n\n".join(parts)
+        return [content[:1500] if content else "" for content in data]
     except Exception as e:
         logger.error("Error in fetch_urls: %s", str(e))
+        return []
 
 
 
 
 
 @tool
-async def web_search(query: str) ->list[str]:
-    """Perform a web search using Tavily and return a list of result URLs. Use this for general-purpose web research."""
+async def web_search(state: ResearchAgentState) -> str:
+    """Perform a web search using Tavily and store results in state.documents. Use this for general-purpose web research."""
     try:
+        query = state.query
         encoded_query = urllib.parse.quote(query)
         tavily_search = TavilySearch(
             tavily_api_key=ProviderConfig.tavily_api_key,
@@ -44,35 +40,41 @@ async def web_search(query: str) ->list[str]:
         urls = [doc.get("url") for doc in response.get("results", [])]
         logger.info("Web search returned %d results", len(urls))
 
-        data = [await fetch_urls(url) for url in urls]
-
-        return data
-    
+        documents = await fetch_urls(urls)
+        state.documents.extend(documents)
+        
+        return f"Web search completed. Collected {len(documents)} documents."
 
     except Exception as e:
         logger.error("Error in web_search: %s", str(e))
+        return f"Web search failed: {str(e)}"
 
 
 
 
 
 @tool
-async def research_paper(query: str) -> str:
-    """Search for academic papers on Arxiv. Use for scientific, technical, or scholarly queries."""
+async def research_paper(state: ResearchAgentState) -> str:
+    """Search for academic papers on Arxiv and store results in state.documents. Use for scientific, technical, or scholarly queries."""
     try:
+        query = state.query
         arxiv = ArxivQueryRun()
         data = await asyncio.to_thread(arxiv.run, query)
-        return data
+        documents = [data[:1500]] if data else []
+        state.documents.extend(documents)
+        
+        return f"Arxiv search completed. Collected {len(documents)} documents."
     except Exception as e:
         logger.error("Error in research_paper: %s", str(e))
-        return f"Arxiv search failed: {e}"
+        return f"Arxiv search failed: {str(e)}"
 
 
 
 @tool
-async def coding_research(query: str) -> str:
-    """Search for coding answers across StackOverflow, GitHub, MDN, and Microsoft Learn."""
+async def coding_research(state: ResearchAgentState) -> str:
+    """Search for coding answers across StackOverflow, GitHub, MDN, and Microsoft Learn and store results in state.documents."""
     try:
+        query = state.query
         encoded = urllib.parse.quote(query)
         sources = {
             "stackoverflow": f"https://stackoverflow.com/search?q={encoded}",
@@ -82,25 +84,31 @@ async def coding_research(query: str) -> str:
         }
         data = await asyncio.gather(*[read_url(url) for url in sources.values()])
 
-        return "\n\n".join(
-            f"--- {name} ---\n{content[:2000]}"
+        documents = [
+            f"--- {name} ---\n{content[:1500]}"
             for name, content in zip(sources, data)
-        )
+        ]
+        state.documents.extend(documents)
+        
+        return f"Coding research completed. Collected {len(documents)} documents."
     except Exception as e:
         logger.error("Error in coding_research: %s", str(e))
+        return f"Coding research failed: {str(e)}"
 
 
 @tool
-def get_finance_news(query: str) -> str:
+def get_finance_news(state: ResearchAgentState) -> str:
     """
-    Fetch latest finance and market news based on a query.
+    Fetch latest finance and market news based on state.query.
     Supports topics like: stocks, crypto, forex, economy, earnings, IPO, etc.
-    Stores results in state memory for downstream tools.
+    Stores results in state.documents.
     """
-    api_key = ProviderConfig.news_api_key  # Get free key at newsapi.org
+    query = state.query
+    api_key = ProviderConfig.news_api_key
 
     if not api_key:
-        return "Error: NEWSAPI_KEY environment variable not set."
+        logger.error("NEWSAPI_KEY environment variable not set")
+        return "Finance news search failed: API key not configured."
 
     url = "https://newsapi.org/v2/everything"
     params = {
@@ -120,21 +128,18 @@ def get_finance_news(query: str) -> str:
         if not articles:
             return f"No finance news found for: {query}"
 
-        # Format articles
-        results = []
+        documents = []
         for i, article in enumerate(articles, 1):
-            results.append(
+            documents.append(
                 f"{i}. [{article['source']['name']}] {article['title']}\n"
                 f"   Published: {article['publishedAt'][:10]}\n"
                 f"   Summary: {article.get('description', 'N/A')}\n"
                 f"   URL: {article['url']}"
             )
 
-        formatted = "\n\n".join(results)
-
-
-
-        return formatted
+        state.documents.extend(documents)
+        return f"Finance news search completed. Collected {len(documents)} documents."
 
     except requests.exceptions.RequestException as e:
-        logger.error("Error in coding_research: %s", str(e))
+        logger.error("Error in get_finance_news: %s", str(e))
+        return f"Finance news search failed: {str(e)}"

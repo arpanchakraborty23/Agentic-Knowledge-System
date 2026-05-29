@@ -1,29 +1,37 @@
 import asyncio
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 from rich import print
-from src.tools import ToolMemory, create_research_tools
+from langchain.chat_models import init_chat_model
 
-async def test_research_tools():
-    print("[bold green]Testing Research Tools...[/bold green]")
+from src.constants import GraphState
+from src.nodes import ResearchNode
 
-    memory = ToolMemory()
-    tools = create_research_tools(memory)
-    tool_map = {t.name: t for t in tools}
 
-    print("\n[bold blue]1. Testing Web Search Tool[/bold blue]")
-    result = await tool_map["web_search"].ainvoke({"query": "what is LangChain"})
-    print(f"URLs: {result[:300]}...")
+async def test_research_node():
+    print("[bold green]Testing Research Node...[/bold green]")
 
-    print("\n[bold blue]2. Testing Arxiv Research Tool[/bold blue]")
-    result = await tool_map["research_paper"].ainvoke({"query": "Attention is all you need"})
-    print(f"Paper data: {result[:300]}...")
+    llm = init_chat_model(
+        model="groq:llama-3.3-70b-versatile",
+        api_key=os.getenv("GROQ_API_KEY")
+    )
 
-    print("\n[bold blue]3. Testing Coding Research Tool[/bold blue]")
-    result = await tool_map["coding_research"].ainvoke({"query": "asyncio gather python"})
-    print(f"Coding data: {result[:300]}...")
+    node = ResearchNode(llm)
 
-    print("\n[bold green]Tool Memory Contents:[/bold green]")
-    for tool_name, entries in memory.get_all_results().items():
-        print(f"\n  {tool_name}: {len(entries)} call(s)")
+    state = GraphState(
+        query="What are the latest advancements in reinforcement learning?",
+        classified_domain="general_knowledge"
+    )
+
+    result = await node.search(state)
+
+    print("\n[bold blue]Research Data Output:[/bold blue]")
+    print(result.research_data)
+
+    print(f"\n[bold]knowledge_base:[/bold] {result.knowledge_base}")
+
 
 if __name__ == "__main__":
-    asyncio.run(test_research_tools())
+    asyncio.run(test_research_node())

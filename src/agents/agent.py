@@ -2,12 +2,12 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-from langgraph.graph import START,StateGraph
+from langgraph.graph import START, StateGraph
 from langchain.chat_models import init_chat_model
 
 from src.utils import setup_logger
 from src.constants import GraphState
-from src.nodes import ClassifierAgent, ResearchAgent
+from src.nodes import ClassifierNode, ResearchNode
 
 logger = setup_logger(name="KnowledgeAgent",log_file="agent.log")
 
@@ -20,8 +20,8 @@ class GraphBuilder:
         )
 
         # Nodes
-        self.clssifier_agent = ClassifierAgent(self.llm)
-        self.research_agent = ResearchAgent(self.llm)
+        self.clssifier_agent = ClassifierNode(self.llm)
+        self.research_agent = ResearchNode(self.llm)
 
 
     def _build_graph(self):
@@ -48,6 +48,7 @@ class GraphAgent:
     """"Main Agent Entrypoint"""
     def __init__(self):
         self._graph = GraphBuilder()._build_graph()
+        self._graph.get_graph().draw_mermaid_png(output_file_path="data/graph.png")
 
     def invoke(self,user_id,query):
         try:

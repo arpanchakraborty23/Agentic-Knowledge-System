@@ -1,7 +1,7 @@
-from .classifier import ClassifierAgent
-from .research import ResearchAgent
+from .classifier import ClassifierNode
+from .research import ResearchNode
 
 __all__ = [
-    "ClassifierAgent",
-    "ResearchAgent",
+    "ClassifierNode",
+    "ResearchNode",
 ]

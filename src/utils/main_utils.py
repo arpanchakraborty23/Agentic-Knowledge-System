@@ -2,7 +2,7 @@ import re
 import unicodedata
 from typing import Optional, List, Type
 from playwright.async_api import async_playwright
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.chat_models import BaseChatModel
 from langchain.tools import BaseTool
 
@@ -11,7 +11,7 @@ def llm_chain(template: str,llm: BaseChatModel,output_parser_class: Optional[Typ
     
     # Create Prompt Template
     prompt = ChatPromptTemplate.from_messages(
-        [("system", template)]
+        [("system", template), MessagesPlaceholder(variable_name="messages", optional=True)]
         )
 
     model = llm
