@@ -2,43 +2,22 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Annotated, Literal
 from operator import add
 from enum import Enum
+from pathlib import Path
 from langchain.messages import AnyMessage
+from langchain_core.documents import Document
 
-# GraphState acts as the shared conversation and workflow context
-# for the agent system. It holds user metadata, message history,
-# task-specific information, tool outputs, and the next step to take.
+
 class GraphState(BaseModel):
-    # Unique identifier for the current user or session.
     user_id: Optional[str] = None
-
-    # Conversation history accumulated across graph steps.
-    # Uses the `add` reducer so messages from each node are merged,
-    # not overwritten — standard LangGraph pattern for stateful chat.
     messages: Annotated[List[AnyMessage], add] = Field(default_factory=list, description="Conversation history")
-
-    # The current user query for this turn.
     query: str = Field(..., description="The query to be processed.")
-
-    # The classified domain/category of the query after routing (e.g., software, indian_school, etc.)
-    classified_domain : Optional[str] = Field(None, description="The classified domain of the query")
+    classified_domain: Optional[str] = Field(None, description="The classified domain of the query")
     classifier_note: Optional[str] = Field(None, description="Optional note or explanation from the LLM about the classification decision.")
-
-    research_data : Optional[dict] = Field(None, description="Data retrieved from research nodes, if applicable.")
-
-    knowledge_base : Optional[Literal["retrive","add"]] = Field(None, description="Knowledge base need to create if applicable.")
-
-
-class ResearchAgentState(BaseModel):
-    query: str
-    domain: str
-    messages: Annotated[List[AnyMessage], add] = Field(default_factory=list)
-    documents: Annotated[List[str], add] = Field(default_factory=list)
-    tool_rounds: int = Field(0, description="Number of tool-enabled LLM turns completed.")
+    research_data_path: Optional[Path] = Path("Artifacts/research_data.txt")
+    knowledge_base: Optional[Literal["retrive", "add"]] = Field(None, description="Knowledge base need to create if applicable.")
+    research_data: Optional[str] = Field(None, description="Collected research documents text")
 
 
-
-# RouteType defines the available categories for routing user queries
-# to specialized agents based on query content and domain.
 class RouteType(str, Enum):
     SOFTWARE = "software"
     INDIAN_SCHOOL = "indian_school"
@@ -48,14 +27,15 @@ class RouteType(str, Enum):
     NON_TECH = "non_tech"
 
 
-# RouteQuery represents the structured output from the routing LLM.
-# It contains the determined routing category for a user's query.
 class ClassifiQuery(BaseModel):
-    # The category selected for routing the user's query to an appropriate agent.
-    route : RouteType = Field(
-        ..., description="The category selected for routing the user's query.")
-    note: Optional[str] = Field(
-        None, description="Optional note or explanation from the LLM about the routing decision.")
+    route: RouteType = Field(..., description="The category selected for routing the user's query.")
+    note: Optional[str] = Field(None, description="Optional note or explanation from the LLM about the routing decision.")
 
 
-
+class ResearchAgentState(BaseModel):
+    session_id: str = Field(..., description="Unique session ID for this research run")
+    query: str = Field(..., description="The research query")
+    domain: Optional[str] = Field(None, description="Research domain")
+    documents: List[Document] = Field(default_factory=list, description="Collected research documents")
+    messages: Annotated[List[AnyMessage], add] = Field(default_factory=list, description="Agent messages")
+    tool_rounds: int = Field(0, description="Number of tool execution rounds")

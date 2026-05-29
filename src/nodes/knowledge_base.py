@@ -12,6 +12,8 @@ class KnowledgeNode:
 
     def invoke(self,state:GraphState) ->GraphState:
         try:
-            pass
+            # Keep the node harmless until a real knowledge-base action is added.
+            return state
         except Exception as e:
-            
+            logger.error("Error in knowledge base node: %s", str(e))
+            return state
