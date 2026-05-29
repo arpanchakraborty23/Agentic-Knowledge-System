@@ -1,20 +1,30 @@
 import re
 import unicodedata
-from typing import Optional, Callable
+from typing import Optional, List, Type
 from playwright.async_api import async_playwright
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.chat_models import BaseChatModel
-from langchain_core.runnables import RunnableSerializable
+from langchain.tools import BaseTool
 
-def llm_chain(template: str, llm: BaseChatModel, output_parser_class: Optional[type] = None) -> RunnableSerializable:
-    prompt = ChatPromptTemplate.from_messages([("system", template)])
+
+def llm_chain(template: str,llm: BaseChatModel,output_parser_class: Optional[Type[BaseTool]] = None,tools: Optional[List[BaseTool]] = None,):
+    
+    # Create Prompt Template
+    prompt = ChatPromptTemplate.from_messages(
+        [("system", template)]
+        )
+
+    model = llm
+
+    if tools:
+        model = model.bind_tools(tools)
 
     if output_parser_class:
-        llm_with_parser = llm.with_structured_output(output_parser_class)
-        chain = prompt | llm_with_parser
-    else:
-        chain = prompt | llm
-    return chain
+        model = model.with_structured_output(
+            output_parser_class
+        )
+
+    return prompt | model
 
 
 

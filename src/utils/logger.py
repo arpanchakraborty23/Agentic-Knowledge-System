@@ -127,7 +127,7 @@ class HighlightingLogger(logging.Logger):
 logging.setLoggerClass(HighlightingLogger)
 
 
-def setup_test_logger(
+def setup_logger(
     name: Optional[str] = None,
     level: int = logging.DEBUG,
     log_file: Optional[str] = None,
@@ -210,7 +210,7 @@ def get_logger(name: str = "test") -> HighlightingLogger:
         return logger  # type: ignore
     
     # Setup with defaults
-    return setup_test_logger(
+    return setup_logger(
         name=name,
         level=logging.DEBUG,
         use_colors=True,
@@ -220,7 +220,7 @@ def get_logger(name: str = "test") -> HighlightingLogger:
 # Example usage and testing
 if __name__ == "__main__":
     # Create test logger
-    logger = setup_test_logger(
+    logger = setup_logger(
         name="test_logger",
         level=logging.DEBUG,
         log_file="logs/test.log",

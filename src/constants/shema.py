@@ -23,7 +23,12 @@ class GraphState(BaseModel):
 
 
 
-class 
+class ResearchAgentState(BaseModel):
+    query: str
+    domain: str
+    results: List[str] = []
+
+
 
 
 

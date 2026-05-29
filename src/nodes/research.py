@@ -1,17 +1,69 @@
 from langchain_core.language_models import BaseChatModel
-from langgraph.prebuilt import create_react_agent
+from langgraph.graph import StateGraph, END
+from langgraph.prebuilt import ToolNode, tools_condition
 
-from src.constants import GraphState
-from src.tools import ToolMemory, create_research_tools
-from src.utils import get_logger
+from src.constants import GraphState, ResearchAgentState
+from src.prompts import RESEARCH_PROMPT
+from src.tools import get_finance_news, coding_research, research_paper, web_search
+from src.utils import get_logger,llm_chain
 
 logger = get_logger(name="Research Agent")
 
 
+class ResearchReActAgent:
+    """
+    This is Reseacrh Sub Agent build on ReAct Agent Architechure
+    """
+    def __init__(self,llm:BaseChatModel) -> None:
+        self.tools =[get_finance_news, coding_research, research_paper, web_search]
+        self.llm_chain = llm_chain(template=RESEARCH_PROMPT,llm=llm,tools=self.tools) 
 
+        self.research_agent = self._research_nodes() 
 
+    def __llm(self,state:ResearchAgentState)-> dict:
 
+        query = state.query
+        response = self.llm_chain.invoke(query)
 
+        logger.info(f"Research Agent Query: {query}, /nRespose {response}")
+        
+        return {
+            "Agent_response" : response,
+            "Documents": state.results
+        }
+
+    def _research_nodes(self):
+        try:
+            agent_builder = StateGraph(ResearchAgentState)
+
+            # nodes
+            agent_builder.add_node("llm",self.__llm)
+            agent_builder.add_node("tools",ToolNode(self.tools))
+
+            # edges
+            agent_builder.set_entry_point("llm")
+            agent_builder.add_conditional_edges(
+                "tools",
+                tools_condition
+            )
+            agent_builder.add_edge("tools","llm")
+            agent_builder.add_edge("llm",END)
+
+            return agent_builder.compile()
+            
+        except Exception as e:
+            logger.error("Error in coding_research: %s", str(e))
+
+    def run(self,query:str, domain):
+        """Invokcation of graph node"""
+        
+        response = self.research_agent.invoke(
+            input=ResearchAgentState(
+                query=query,domain=domain
+            )
+        )
+
+        return response['Documents']
 
 
 
@@ -23,38 +75,18 @@ class ResearchAgent:
     can inspect past results across turns.
     """
 
-    def __init__(self, model: BaseChatModel, system_prompt: str | None = None):
+    def __init__(self, model: BaseChatModel):
         self.model = model
-        self.memory = ToolMemory()
-        self.tools = create_research_tools(self.memory)
+        self.agent = ResearchReActAgent(self.model)
 
-        prompt = system_prompt or (
-            "You are a research assistant. Use the available tools to gather information "
-            "from the web, academic papers, and coding resources. "
-            "Always cite your sources when presenting findings."
-        )
 
-        self.agent = create_react_agent(
-            model=self.model,
-            tools=self.tools,
-            state_modifier=prompt,
-        )
-        logger.info("ResearchAgent initialized with %d tools", len(self.tools))
 
-    async def run(self, state: GraphState) -> GraphState:
+    async def search(self, state: GraphState) -> GraphState:
         """Execute the research ReAct agent and update the graph state."""
-        self.memory.clear()
 
-        response = await self.agent.ainvoke(
-            {"messages": [("human", state.query)]}
+        response = await self.agent.run(
+            query=state.query, domain=state.classified_domain
         )
 
-        messages = response.get("messages", [])
-        final_content = messages[-1].content if messages else ""
 
-        research_data = {
-            "tool_memory": self.memory.get_all_results(),
-            "summary": final_content,
-        }
-
-        return state.model_copy(update={"research_data": research_data})
+        return state.model_copy(update={"research_data": response})

@@ -5,9 +5,12 @@ load_dotenv()
 from langgraph.graph import START,StateGraph
 from langchain.chat_models import init_chat_model
 
-from src.utils import logger
+from src.utils import setup_logger
 from src.constants import GraphState
-from src.nodes import ClassifierAgent
+from src.nodes import ClassifierAgent, ResearchAgent
+
+logger = setup_logger(name="KnowledgeAgent",log_file="agent.log")
+
 
 class GraphBuilder:
     def __init__(self):
@@ -18,6 +21,7 @@ class GraphBuilder:
 
         # Nodes
         self.clssifier_agent = ClassifierAgent(self.llm)
+        self.research_agent = ResearchAgent(self.llm)
 
 
     def _build_graph(self):
@@ -27,9 +31,11 @@ class GraphBuilder:
 
             # Add nodes to the graph
             builder.add_node("classifier", self.clssifier_agent.classify)
+            builder.add_node("research_agent",self.research_agent.search)
 
             # Define edges between nodes (for now, it's just a single node, so no edges needed)
             builder.add_edge(START, "classifier")
+            builder.add_edge("classifier","research_agent")
 
 
             return builder.compile()
@@ -43,11 +49,14 @@ class GraphAgent:
     def __init__(self):
         self._graph = GraphBuilder()._build_graph()
 
-    def invoke(self,query):
+    def invoke(self,user_id,query):
         try:
-            response = self._graph({
-                "query" : query 
-            })
+            response = self._graph.invoke(
+                input=GraphState(
+                    user_id=user_id,
+                    query=query
+                )
+            )
 
             return response
         except Exception as e:
