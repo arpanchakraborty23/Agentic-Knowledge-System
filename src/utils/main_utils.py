@@ -11,7 +11,7 @@ def llm_chain(template: str,llm: BaseChatModel,output_parser_class: Optional[Typ
     
     # Create Prompt Template
     prompt = ChatPromptTemplate.from_messages(
-        [("system", template), MessagesPlaceholder(variable_name="messages", optional=True)]
+        [("system", template)]
         )
 
     model = llm

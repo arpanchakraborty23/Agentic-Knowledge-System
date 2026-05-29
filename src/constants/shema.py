@@ -33,6 +33,7 @@ class ResearchAgentState(BaseModel):
     domain: str
     messages: Annotated[List[AnyMessage], add] = Field(default_factory=list)
     documents: Annotated[List[str], add] = Field(default_factory=list)
+    tool_rounds: int = Field(0, description="Number of tool-enabled LLM turns completed.")
 
 
 

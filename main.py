@@ -14,7 +14,7 @@ async def test_research_node():
     print("[bold green]Testing Research Node...[/bold green]")
 
     llm = init_chat_model(
-        model="groq:llama-3.3-70b-versatile",
+        model="groq:openai/gpt-oss-20b",
         api_key=os.getenv("GROQ_API_KEY")
     )
 
