@@ -7,9 +7,7 @@ from langchain.agents.middleware import ToolCallLimitMiddleware
 from src.constants import GraphState, ResearchToolState
 from src.tools.research_tools import build_research_tools
 from src.prompts import RESEARCH_PROMPT
-from src.utils import (
-    get_logger,
-)
+from src.utils import get_logger
 
 logger = get_logger(name="ResearchNode")
 
@@ -43,7 +41,7 @@ class ResearchReActAgent:
     
 
 class ResearchNode:
-    """Research node that collects documents and stores them in graph state."""
+    """Research node that collects documents for knowledge base."""
 
     def __init__(self, model: BaseChatModel):
         self.model = model
@@ -51,7 +49,7 @@ class ResearchNode:
         logger.info("ResearchNode initialized")
 
     async def search(self, state: GraphState) -> GraphState:
-        """Execute research agent and update graph state."""
+        """Execute research agent and collect documents."""
 
         logger.info(
             f"ResearchNode.search - query: {state.query}, "
