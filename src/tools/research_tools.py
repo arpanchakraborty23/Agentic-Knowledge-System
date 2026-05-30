@@ -1,16 +1,17 @@
 import requests
 import urllib.parse
 import asyncio
-from pathlib import Path
+import arxiv
 from langchain_tavily import TavilySearch
-from langchain_community.tools import ArxivQueryRun
-from langchain.tools import tool
+from langchain.messages import ToolMessage
+from langchain.tools import tool, ToolRuntime
+from langgraph.types import Command
 
-from src.constants import ProviderConfig
+from src.constants import ProviderConfig,ResearchToolState
 from src.utils import get_logger, read_url
 
 logger = get_logger(name="KnowledgeAgent")
-DATA_PATH =  Path("Artifacts/research_data.txt")
+
 
 
 async def fetch_urls(urls: list[str]) -> list[str]:
@@ -25,18 +26,11 @@ async def fetch_urls(urls: list[str]) -> list[str]:
         return []
 
 
-def save_txt(document):
-    DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(DATA_PATH,'a', encoding='utf-8') as f:
-        for doc in document:
-            f.write(str(doc) + "\n")
-
 
 @tool
-async def web_search(query) -> str:
+async def web_search(runtime: ToolRuntime[ResearchToolState],query:str) -> Command:
     """Perform a web search using Tavily and store results in state.documents. Use this for general-purpose web research."""
     try:
-        query = query
         encoded_query = urllib.parse.quote(query)
         tavily_search = TavilySearch(
             tavily_api_key=ProviderConfig.tavily_api_key,
@@ -48,10 +42,21 @@ async def web_search(query) -> str:
 
         documents = await fetch_urls(urls)
 
-        save_txt(documents)
-        logger.info(f"Web search search completed. Collected {len(documents)} documents.")
+        word_count = sum(len(doc.split()) for doc in documents) if documents else 0
+        logger.info(f"Web search search completed. Collected {len(documents)} documents ({word_count} words).")
         
-        return f"Web search completed. Collected {len(documents)} documents."
+        return Command(
+            update={
+                "research_docs": documents,
+                "research_word_count": word_count,
+                "messages": [
+                    ToolMessage(
+                        content=f"Web search search completed. Collected {len(documents)} documents ({word_count} words).",
+                        tool_call_id=runtime.tool_call_id,
+                    )
+                ],
+            }
+        )
 
     except Exception as e:
         logger.error("Error in web_search: %s", str(e))
@@ -62,17 +67,40 @@ async def web_search(query) -> str:
 
 
 @tool
-async def research_paper(query) -> str:
+async def research_paper(runtime: ToolRuntime[ResearchToolState], query) -> Command:
     """Search for academic papers on Arxiv and store results in state.documents. Use for scientific, technical, or scholarly queries."""
     try:
-        query = query
-        arxiv = ArxivQueryRun()
-        data = await asyncio.to_thread(arxiv.run, query)
-        documents = [data] if data else []
-        save_txt(documents)
-        logger.info(f"Finance news search completed. Collected {len(documents)} documents.")
+        def _fetch_arxiv():
+            client = arxiv.Client(page_size=5, delay_seconds=0.0, num_retries=2)
+            search = arxiv.Search(query=query[:300], max_results=5)
+            docs = []
+            for result in client.results(search):
+                docs.append(
+                    f"Title: {result.title}\n"
+                    f"Authors: {', '.join(author.name for author in result.authors)}\n"
+                    f"Published: {result.published.date()}\n"
+                    f"Summary: {result.summary[:500]}\n"
+                    f"URL: {result.entry_id}"
+                )
+            return docs
         
-        return f"Arxiv search completed. Collected {len(documents)} documents."
+        documents = await asyncio.to_thread(_fetch_arxiv)
+   
+        word_count = sum(len(doc.split()) for doc in documents) if documents else 0
+        logger.info(f"Arxiv search completed. Collected {len(documents)} documents ({word_count} words).")
+        
+        return Command(
+            update={
+                "research_docs": documents,
+                "research_word_count": word_count,
+                "messages": [
+                    ToolMessage(
+                        content=f"Arxiv search completed. Collected {len(documents)} documents ({word_count} words).",
+                        tool_call_id=runtime.tool_call_id,
+                    )
+                ],
+            }
+        )
     except Exception as e:
         logger.error("Error in research_paper: %s", str(e))
         return f"Arxiv search failed: {str(e)}"
@@ -80,7 +108,7 @@ async def research_paper(query) -> str:
 
 
 @tool
-async def coding_research(query) -> str:
+async def coding_research(runtime: ToolRuntime[ResearchToolState],query) -> Command:
     """Search for coding answers across StackOverflow, GitHub, MDN, and Microsoft Learn and store results in state.documents."""
     try:
         query = query
@@ -94,20 +122,33 @@ async def coding_research(query) -> str:
         data = await asyncio.gather(*[read_url(url) for url in sources.values()])
 
         documents = [
-            f"--- {name} ---\n{content[:1500]}"
+            f"--- {name} ---\n{content}"
             for name, content in zip(sources, data)
         ]
-        save_txt(documents)
-        logger.info(f" Research paper completed. Collected {len(documents)} documents.")
+    
+        word_count = sum(len(doc.split()) for doc in documents) if documents else 0
+        logger.info(f"Coding research completed. Collected {len(documents)} documents ({word_count} words).")
 
-        return f"Coding research completed. Collected {len(documents)} documents."
+        return Command(
+            update={
+                "research_docs": documents,
+                "research_word_count": word_count,
+                "messages": [
+                    ToolMessage(
+                        content=f"Coding research completed. Collected {len(documents)} documents ({word_count} words).",
+                        tool_call_id=runtime.tool_call_id,
+                    )
+                ],
+            }
+        )
+    
     except Exception as e:
         logger.error("Error in coding_research: %s", str(e))
         return f"Coding research failed: {str(e)}"
 
 
 @tool
-def get_finance_news(query) -> str:
+def get_finance_news(runtime: ToolRuntime[ResearchToolState],query) -> Command:
     """
     Fetch latest finance and market news based on query.
     Supports topics like: stocks, crypto, forex, economy, earnings, IPO, etc.
@@ -147,10 +188,21 @@ def get_finance_news(query) -> str:
                 f"   URL: {article['url']}"
             )
 
-        save_txt(documents)
-        logger.info(f"Finance news search completed. Collected {len(documents)} documents.")
+        word_count = sum(len(doc.split()) for doc in documents) if documents else 0
+        logger.info(f"Finance news search completed. Collected {len(documents)} documents ({word_count} words).")
 
-        return f"Finance news search completed. Collected {len(documents)} documents."
+        return Command(
+            update={
+                "research_docs": documents,
+                "research_word_count": word_count,
+                "messages": [
+                    ToolMessage(
+                        content=f"Finance news search completed. Collected {len(documents)} documents ({word_count} words).",
+                        tool_call_id=runtime.tool_call_id,
+                    )
+                ],
+            }
+        )
 
     except requests.exceptions.RequestException as e:
         logger.error("Error in get_finance_news: %s", str(e))

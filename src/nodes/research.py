@@ -1,14 +1,10 @@
-from __future__ import annotations
-
-import asyncio
-from typing import Any
-from pathlib import Path
+from __future__ import annotations 
 
 from langchain_core.language_models import BaseChatModel
 from langchain.agents import create_agent 
 from langchain.agents.middleware import ToolCallLimitMiddleware
 
-from src.constants import GraphState
+from src.constants import GraphState, ResearchToolState
 from src.tools.research_tools import build_research_tools
 from src.prompts import RESEARCH_PROMPT
 from src.utils import (
@@ -16,7 +12,7 @@ from src.utils import (
 )
 
 logger = get_logger(name="ResearchNode")
-DATA_PATH = Path("Artifacts/research_data.txt")
+
 
 
 class ResearchReActAgent:
@@ -35,6 +31,7 @@ class ResearchReActAgent:
             model=self.llm,
             tools=self.tools,
             system_prompt=RESEARCH_PROMPT,
+            state_schema=ResearchToolState,
             middleware=[
                 ToolCallLimitMiddleware(
                     run_limit=2,
@@ -71,15 +68,11 @@ class ResearchNode:
                 ]
             }
         )
-        
-        if DATA_PATH.exists():
-            research_data = DATA_PATH.read_text(encoding="utf-8")
-            logger.info(f"ResearchNode.search complete - collected data from {DATA_PATH}")
-        else:
-            research_data = ""
-            logger.warning(f"ResearchNode.search - no data file found at {DATA_PATH}")
 
-        print(research_data)
+        research_docs = result.get("research_docs", []) if isinstance(result, dict) else getattr(result, "research_docs", [])
+        research_data = "\n\n".join(research_docs) if research_docs else None
+        word_count = result.get("research_word_count", 0) if isinstance(result, dict) else getattr(result, "research_word_count", 0)
+        logger.info(f"Transferred {len(research_docs)} documents ({word_count} words) from sub-agent to main state")
         
         return state.model_copy(
             update={
@@ -87,4 +80,5 @@ class ResearchNode:
                 "knowledge_base": "add",
             }
         )
+
 

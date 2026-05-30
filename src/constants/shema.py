@@ -5,6 +5,7 @@ from enum import Enum
 from pathlib import Path
 from langchain.messages import AnyMessage
 from langchain_core.documents import Document
+from langchain.agents import AgentState
 
 
 class GraphState(BaseModel):
@@ -13,7 +14,6 @@ class GraphState(BaseModel):
     query: str = Field(..., description="The query to be processed.")
     classified_domain: Optional[str] = Field(None, description="The classified domain of the query")
     classifier_note: Optional[str] = Field(None, description="Optional note or explanation from the LLM about the classification decision.")
-    research_data_path: Optional[Path] = Path("Artifacts/research_data.txt")
     knowledge_base: Optional[Literal["retrive", "add"]] = Field(None, description="Knowledge base need to create if applicable.")
     research_data: Optional[str] = Field(None, description="Collected research documents text")
 
@@ -39,3 +39,7 @@ class ResearchAgentState(BaseModel):
     documents: List[Document] = Field(default_factory=list, description="Collected research documents")
     messages: Annotated[List[AnyMessage], add] = Field(default_factory=list, description="Agent messages")
     tool_rounds: int = Field(0, description="Number of tool execution rounds")
+
+class ResearchToolState(AgentState):
+    research_docs: Annotated[list[str], add]
+    research_word_count: Annotated[int, add]

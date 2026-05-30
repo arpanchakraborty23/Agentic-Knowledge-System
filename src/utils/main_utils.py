@@ -1,14 +1,13 @@
 import re
-import uuid
 import unicodedata
 from typing import Optional, List, Type
 from pathlib import Path
 from playwright.async_api import async_playwright
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import ChatPromptTemplate
 from langchain.chat_models import BaseChatModel
 from langchain.tools import BaseTool
 
-from src.constants import StorageConfig
+
 from src.utils.logger import get_logger
 
 logger = get_logger(name="KnowledgeAgent")
@@ -57,7 +56,7 @@ async def fetch_site(client, source, url):
             return {
                 "source": source,
                 "url": url,
-                "content": response.text[:5000]
+                "content": response.text
             }
     except Exception:
         pass

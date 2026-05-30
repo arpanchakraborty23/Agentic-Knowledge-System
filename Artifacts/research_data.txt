@@ -1,0 +1,62 @@
+
+
+0:00 / 1:25:44
+Recent Advancements in Inverse Reinforcement Learning
+Authors
+Alberto Maria Metelli
+Politecnico di Milano
+DOI: https://doi.org/10.1609/aaai.v38i20.30296
+Keywords: Artificial Intelligence, Machine Learning, Reinforcement Learning, Inverse Reinforcement Learning
+Abstract
+Inverse reinforcement learning (IRL) has seen significant advancements in recent years. This class of approaches aims to efficiently learn the underlying reward function that rationalizes the behavior exhibited by expert agents, often represented by humans. In contrast to mere behavioral cloning, the reconstruction of a reward function yields appealing implications, as it allows for more effective interpretability of the expert’s decisions and provides a transferable specification of the expert’s objectives for application in even different environments. Unlike the well-understood field of reinforcement learning (RL) from a theoretical perspective, IRL still grapples with limited understanding, significantly constraining its applicability. A fundamental challenge in IRL is the inherent ambiguity in selecting a reward function, given the existence of multiple candidate functions, all explaining the expert’s behavior. In this talk, I will survey three of my papers that have made notable contributions to the IRL field: “Provably Efficient Learning of Transferable Rewards”, “Towards Theoretical Understanding of Inverse Reinforcement Learning”, and “Inverse Reinforcement Learning with Sub-optimal Experts". The centr
+By using this website, you agree that EDP Sciences may store web audience measurement cookies and, on some pages, cookies from social networks. More information and setup
+YesNo
+All issues  Volume 73 (2025)  ITM Web Conf., 73 (2025) 01008  Abstract
+Open Access
+Issue		
+ITM Web Conf.
+Volume 73, 2025
+International Workshop on Advanced Applications of Deep Learning in Image Processing (IWADI 2024)
+
+Article Number		01008
+Number of page(s)		7
+Section		Reinforcement Learning and Optimization Techniques
+DOI		https://doi.org/10.1051/itmconf/20257301008
+Published online		17 February 2025
+ITM Web of Conferences 73, 01008 (2025)
+The advancements and applications of deep reinforcement learning in Go
+
+Xutao Zheng*
+
+Computer Science and Technology, Harbin Institute of Technology (Shenzhen), 518000 Shenzhen, China
+
+* Corresponding author: 220110402@stu.hit.edu.cn
+
+Abstract
+
+Combining Deep Learning's perceptual skills with Reinforcement Learning's decision-making abilities, Deep Reinforcement Learning (DRL) represents a significant breakthrough in Artificial Intelligence (AI). This paper examines the evolution and uses of Deep Reinforcement Learning (DRL), emphasizing both the theoretical underpinnings and the noteworthy real-world applications—like AlphaGo's triumph over elite Go players—of the technology. DRL systems learn optimal policies through interactions with their environment, maximizing long-term cumulative rewards. DRL has achieved remarkable results in complex decision-making tasks
+Title: Value Bonuses using Ensemble Errors for Exploration in Reinforcement Learning
+Authors: Abdul Wahab, Raksha Kumaraswamy, Martha White
+Published: 2026-02-12
+Summary: Optimistic value estimates provide one mechanism for directed exploration in reinforcement learning (RL). The agent acts greedily with respect to an estimate of the value plus what can be seen as a value bonus. The value bonus can be learned by estimating a value function on reward bonuses, propagating local uncertainties around rewards. However, this approach only increases the value bonus for an action retroactively, after seeing a higher reward bonus from that state and action. Such an approa
+URL: http://arxiv.org/abs/2602.12375v1
+Title: Stabilizing Extreme Q-learning by Maclaurin Expansion
+Authors: Motoki Omura, Takayuki Osa, Yusuke Mukuta, Tatsuya Harada
+Published: 2024-06-07
+Summary: In offline reinforcement learning, in-sample learning methods have been widely used to prevent performance degradation caused by evaluating out-of-distribution actions from the dataset. Extreme Q-learning (XQL) employs a loss function based on the assumption that Bellman error follows a Gumbel distribution, enabling it to model the soft optimal value function in an in-sample manner. It has demonstrated strong performance in both offline and online reinforcement learning settings. However, issues
+URL: http://arxiv.org/abs/2406.04896v2
+Title: Learning to Navigate in Mazes with Novel Layouts using Abstract Top-down Maps
+Authors: Linfeng Zhao, Lawson L. S. Wong
+Published: 2024-12-16
+Summary: Learning navigation capabilities in different environments has long been one of the major challenges in decision-making. In this work, we focus on zero-shot navigation ability using given abstract $2$-D top-down maps. Like human navigation by reading a paper map, the agent reads the map as an image when navigating in a novel layout, after learning to navigate on a set of training maps. We propose a model-based reinforcement learning approach for this multi-task learning problem, where it jointly
+URL: http://arxiv.org/abs/2412.12024v1
+Title: End-to-End Reinforcement Learning for Torque Based Variable Height Hopping
+Authors: Raghav Soni, Daniel Harnack, Hannah Isermann, Sotaro Fushimi, Shivesh Kumar, Frank Kirchner
+Published: 2023-07-31
+Summary:   Legged locomotion is arguably the most suited and versatile mode to deal with natural or unstructured terrains. Intensive research into dynamic walking and running controllers has recently yielded great advances, both in the optimal control and reinforcement learning (RL) literature. Hopping is a challenging dynamic task involving a flight phase and has the potential to increase the traversability of legged robots. Model based control for hopping typically relies on accurate detection of diffe
+URL: http://arxiv.org/abs/2307.16676v2
+Title: Causal-Paced Deep Reinforcement Learning
+Authors: Geonwoo Cho, Jaegyun Im, Doyoon Kim, Sundong Kim
+Published: 2025-06-24
+Summary: Designing effective task sequences is crucial for curriculum reinforcement learning (CRL), where agents must gradually acquire skills by training on intermediate tasks. A key challenge in CRL is to identify tasks that promote exploration, yet are similar enough to support effective transfer. While recent approach suggests comparing tasks via their Structural Causal Models (SCMs), the method requires access to ground-truth causal structures, an unrealistic assumption in most RL settings. In this 
+URL: http://arxiv.org/abs/2507.02910v1

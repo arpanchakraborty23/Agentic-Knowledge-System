@@ -28,7 +28,6 @@ async def test_research_node():
     result = await node.search(state)
 
     print("\n[bold blue]Research Data Output:[/bold blue]")
-    print(result.research_data)
 
     print(f"\n[bold]knowledge_base:[/bold] {result.knowledge_base}")
 
