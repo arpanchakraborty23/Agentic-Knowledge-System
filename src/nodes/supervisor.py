@@ -19,7 +19,7 @@ class SupervisorReActAgent:
         return create_agent(
             model=self.llm,
             system_prompt=SUPERVISOR_PROMPT,
-            context_schema=SupervisorOutput,
+            response_format=SupervisorOutput,
             tools=all_tools,
             middleware=[
                 ToolCallLimitMiddleware(
@@ -36,32 +36,35 @@ class SupervisorNode:
 
     async def invoke(self, state: GraphState) -> GraphState:
         try:
-            tool_state = RAGToolState(
-                session_id=state.user_id or "default",
-                query=state.query,
-                messages=state.messages,
+            result = await self._agent.ainvoke(
+                input={
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": state.query
+                        }
+                    ]
+                }
             )
             
-            result = await self._agent.ainvoke(tool_state.model_dump())
-            
             if isinstance(result, dict):
-                output_data = result.get("context", {})
-                method = output_data.get("method", "direct")
-                answer = output_data.get("answer", "")
+                structured_response = result.get("structured_response")
                 
-                rag_docs = result.get("rag_docs", {})
-                similarity_scores = result.get("similarity_scores", {})
+                if structured_response and isinstance(structured_response, SupervisorOutput):
+                    method = structured_response.method
+                    answer = structured_response.answer
+                else:
+                    method = "direct"
+                    answer = ""
                 
                 response_messages = result.get("messages", [])
                 
-                return GraphState(
-                    user_id=state.user_id,
-                    messages=state.messages + response_messages,
-                    query=state.query,
-                    classified_domain=state.classified_domain,
-                    classifier_note=state.classifier_note,
-                    knowledge_base=state.knowledge_base,
-                    research_data=answer,
+                return state.model_copy(
+                    update={
+                        "messages": state.messages + response_messages,
+                        "research_data": answer,
+                        "knowledge_base": "retrieve" if method == "rag" else None,
+                    }
                 )
             
             return state
