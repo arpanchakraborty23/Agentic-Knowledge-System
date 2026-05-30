@@ -11,12 +11,14 @@ from langchain.agents import AgentState
 class GraphState(BaseModel):
     user_id: Optional[str] = None
     messages: Annotated[List[AnyMessage], add] = Field(default_factory=list, description="Conversation history")
+
     query: str = Field(..., description="The query to be processed.")
     classified_domain: Optional[str] = Field(None, description="The classified domain of the query")
     classifier_note: Optional[str] = Field(None, description="Optional note or explanation from the LLM about the classification decision.")
     
     knowledge_base: Optional[Literal["retrieve", "add"]] = Field(None, description="Knowledge base need to create if applicable.")
     research_data: Optional[str] = Field(None, description="Collected research documents text")
+
 
 
 class RouteType(str, Enum):
@@ -41,6 +43,19 @@ class ResearchAgentState(BaseModel):
     messages: Annotated[List[AnyMessage], add] = Field(default_factory=list, description="Agent messages")
     tool_rounds: int = Field(0, description="Number of tool execution rounds")
 
+class RAGToolState(AgentState):
+    rag_docs: Annotated[dict[str, list[str]], add]
+    rag_metadata: Annotated[dict[str, list[dict]], add]
+    rag_word_count: Annotated[dict[str, int], add]
+    similarity_scores: Annotated[dict[str, list[float]], add]
+
+
 class ResearchToolState(AgentState):
     research_docs: Annotated[list[str], add]
     research_word_count: Annotated[int, add]
+
+
+class SupervisorOutput(BaseModel):
+    """Schema for the supervisor agent's JSON output."""
+    method: Literal["direct", "rag", "research"]
+    answer: str

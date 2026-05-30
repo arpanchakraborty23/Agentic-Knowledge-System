@@ -28,9 +28,10 @@ dependencies = [
     "wikipedia>=1.4.0",
     "torch==2.12.0",
     "langchain-tavily>=0.2.18",
-    "playwright>=1.60.0",
     "arxiv>=4.0.0",
     "langchain-qdrant>=0.2.0",
     "langchain-huggingface>=0.2.0",
     "qdrant-client>=1.12.0",
+    "botcore>=1.1.4",
+    "boto3>=1.43.8",
 ]

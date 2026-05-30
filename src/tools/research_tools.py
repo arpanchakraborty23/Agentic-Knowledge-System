@@ -8,6 +8,7 @@ from langchain.tools import tool, ToolRuntime
 from langgraph.types import Command
 
 from src.constants import ProviderConfig,ResearchToolState
+from src.rag.vector_store import VectorStoreManager
 from src.utils import get_logger, read_url
 
 logger = get_logger(name="KnowledgeAgent")
@@ -207,6 +208,6 @@ def get_finance_news(runtime: ToolRuntime[ResearchToolState],query) -> Command:
     except requests.exceptions.RequestException as e:
         logger.error("Error in get_finance_news: %s", str(e))
         return f"Finance news search failed: {str(e)}"
-    
 
-build_research_tools = [web_search,get_finance_news,coding_research,research_paper]
+
+build_research_tools = [web_search, get_finance_news, coding_research, research_paper]
