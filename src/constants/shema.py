@@ -15,7 +15,7 @@ class GraphState(BaseModel):
     classified_domain: Optional[str] = Field(None, description="The classified domain of the query")
     classifier_note: Optional[str] = Field(None, description="Optional note or explanation from the LLM about the classification decision.")
     
-    knowledge_base: Optional[Literal["retrive", "add"]] = Field(None, description="Knowledge base need to create if applicable.")
+    knowledge_base: Optional[Literal["retrieve", "add"]] = Field(None, description="Knowledge base need to create if applicable.")
     research_data: Optional[str] = Field(None, description="Collected research documents text")
 
 

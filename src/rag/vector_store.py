@@ -8,7 +8,7 @@ from langchain_qdrant import QdrantVectorStore
 from langchain_aws import BedrockEmbeddings
 
 from src.utils import get_logger
-from src.constants import ProviderConfig
+from src.constants import ProviderConfig, RAGConfig
 
 logger = get_logger(name="VectorStore")
 
@@ -16,16 +16,17 @@ logger = get_logger(name="VectorStore")
 class VectorStoreManager:
     """Manage vector storage with TTL support."""
 
-    TTL_DAYS = 10
-    COLLECTION_NAME = "knowledge_base"
+    TTL_DAYS = RAGConfig.ttl_days
+    COLLECTION_NAME = RAGConfig.collection_name
 
     def __init__(
         self,
-        embedding_model: str = "aws",
+        embedding_model: Optional[str] = None,
         persist_directory: Optional[str] = None,
     ):
-        self.persist_directory = persist_directory or "./data/qdrant"
-        self.embeddings = self._init_embeddings(embedding_model)
+        self.embedding_model = embedding_model or RAGConfig.embedding_model
+        self.persist_directory = persist_directory or RAGConfig.persist_directory
+        self.embeddings = self._init_embeddings(self.embedding_model)
         self.client = self._init_client()
         self.vector_store = self._init_vector_store()
 
@@ -34,6 +35,7 @@ class VectorStoreManager:
         if model == "aws":
             return BedrockEmbeddings(
                 model_id="amazon.titan-embed-text-v2:0",
+                normalize=True,
                 region_name=ProviderConfig.aws_region,
                 credentials_profile_name=None,
             )

@@ -32,6 +32,13 @@ class ProviderConfig:
     aws_region = env("AWS_REGION", "us-east-1")
 
 
-class StorageConfig:
-    research_data_path = Path(env("RESEARCH_DATA_PATH", "Artifacts"))
+
+
+class RAGConfig:
+    chunk_size = int(env("RAG_CHUNK_SIZE", "1000"))
+    chunk_overlap = int(env("RAG_CHUNK_OVERLAP", "200"))
+    ttl_days = int(env("RAG_TTL_DAYS", "10"))
+    collection_name = env("RAG_COLLECTION_NAME", "knowledge_base")
+    persist_directory = env("RAG_PERSIST_DIRECTORY", "./qdrant_data")
+    embedding_model = env("RAG_EMBEDDING_MODEL", "aws")
 
