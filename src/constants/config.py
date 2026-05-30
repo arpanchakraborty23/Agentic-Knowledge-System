@@ -27,6 +27,9 @@ class ProviderConfig:
     groq_api_key = required_env("GROQ_API_KEY")
     tavily_api_key = required_env("TAVLIY_API_KEY")
     news_api_key = required_env("NEWS_API_KEY")
+    aws_access_key_id = env("AWS_ACCESS_KEY_ID")
+    aws_secret_access_key = env("AWS_SECRET_ACCESS_KEY")
+    aws_region = env("AWS_REGION", "us-east-1")
 
 
 class StorageConfig:

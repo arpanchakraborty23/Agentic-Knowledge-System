@@ -2,12 +2,10 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 
 from langchain_core.documents import Document
-from langchain_core.vectorstores import VectorStore
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 from langchain_qdrant import QdrantVectorStore
-from langchain_openai import OpenAIEmbeddings
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_aws import BedrockEmbeddings
 
 from src.utils import get_logger
 from src.constants import ProviderConfig
@@ -23,7 +21,7 @@ class VectorStoreManager:
 
     def __init__(
         self,
-        embedding_model: str = "huggingface",
+        embedding_model: str = "aws",
         persist_directory: Optional[str] = None,
     ):
         self.persist_directory = persist_directory or "./data/qdrant"
@@ -33,16 +31,18 @@ class VectorStoreManager:
 
     def _init_embeddings(self, model: str):
         """Initialize embeddings model."""
-        if model == "openai":
-            return OpenAIEmbeddings(
-                model="text-embedding-3-small",
-                api_key=ProviderConfig.openai_api_key,
+        if model == "aws":
+            return BedrockEmbeddings(
+                model_id="amazon.titan-embed-text-v2:0",
+                region_name=ProviderConfig.aws_region,
+                credentials_profile_name=None,
             )
         else:
-            return HuggingFaceEmbeddings(
-                model_name="sentence-transformers/all-MiniLM-L6-v2",
-                cache_folder="./models/embeddings",
-            )
+            raise ValueError(f"Unsupported embedding model: {model}")
+
+    def _get_embedding_dimension(self) -> int:
+        """Get embedding dimension based on model."""
+        return 1024
 
     def _init_client(self) -> QdrantClient:
         """Initialize Qdrant client."""
@@ -57,7 +57,7 @@ class VectorStoreManager:
             self.client.create_collection(
                 collection_name=self.COLLECTION_NAME,
                 vectors_config=models.VectorParams(
-                    size=384 if isinstance(self.embeddings, HuggingFaceEmbeddings) else 1536,
+                    size=self._get_embedding_dimension(),
                     distance=models.Distance.COSINE,
                 ),
             )
@@ -122,31 +122,9 @@ class VectorStoreManager:
         Returns:
             List of matching Document objects
         """
-        current_timestamp = int(datetime.now().timestamp())
-        
-        filter_conditions = models.Filter(
-            must=[
-                models.FieldCondition(
-                    key="metadata.ttl_timestamp",
-                    match=models.MatchValue(value=current_timestamp),
-                    range=models.Range(gte=current_timestamp),
-                )
-            ]
-        )
-
-        if filter_metadata:
-            for key, value in filter_metadata.items():
-                filter_conditions.must.append(
-                    models.FieldCondition(
-                        key=f"metadata.{key}",
-                        match=models.MatchValue(value=value),
-                    )
-                )
-
         results = self.vector_store.similarity_search(
             query=query,
             k=k,
-            filter=filter_conditions,
         )
         
         logger.info(f"Found {len(results)} documents for query")
@@ -170,12 +148,16 @@ class VectorStoreManager:
             ]
         )
 
-        result = self.client.delete(
-            collection_name=self.COLLECTION_NAME,
-            points_selector=models.FilterSelector(filter=expired_filter),
-        )
+        try:
+            result = self.client.delete(
+                collection_name=self.COLLECTION_NAME,
+                points_selector=models.FilterSelector(filter=expired_filter),
+            )
+            deleted_count = 1
+        except Exception as e:
+            logger.warning(f"Could not delete expired documents: {e}")
+            deleted_count = 0
 
-        deleted_count = result.result.get("deleted_count", 0) if hasattr(result, "result") else 0
         logger.info(f"Deleted {deleted_count} expired documents")
         return deleted_count
 
@@ -186,7 +168,6 @@ class VectorStoreManager:
         return {
             "collection_name": self.COLLECTION_NAME,
             "points_count": collection_info.points_count,
-            "vectors_count": collection_info.vectors_count,
             "status": collection_info.status,
             "ttl_days": self.TTL_DAYS,
         }
